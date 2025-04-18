@@ -1,7 +1,10 @@
 from flask import Flask, render_template, redirect, url_for, request
 import sqlite3
+from werkzeug.middleware.proxy_fix import ProxyFix
+
 
 app = Flask(__name__)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
 
 def get_db_connection():
