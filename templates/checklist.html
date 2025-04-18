@@ -136,7 +136,9 @@ document.querySelectorAll('#location-filter-buttons button').forEach(button => {
             document.querySelectorAll('#location-filter-buttons button[data-location]').forEach(locBtn => {
                 locBtn.classList.remove('active');
             });
-            filterItems();
+            requestAnimationFrame(() => {
+                filterItems();
+            });
         });
     }
 
@@ -150,7 +152,9 @@ document.querySelectorAll('#location-filter-buttons button').forEach(button => {
                 activeLocations.add(location);
                 button.classList.add('active');
             }
-            filterItems();
+            requestAnimationFrame(() => {
+                filterItems();
+            });
         });
     }
 });
