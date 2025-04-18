@@ -125,9 +125,15 @@ document.querySelectorAll('#location-filter-buttons button').forEach(button => {
                 const locVal = locBtn.getAttribute('data-location').toLowerCase();
                 activeLocations.add(locVal);
                 locBtn.classList.add('active');
-                void locBtn.offsetHeight; // ✅ reflow for each button
             });
-            filterItems();
+
+            // Force layout flush
+            document.body.offsetHeight;
+
+            // Defer filter so Safari has time to paint the buttons
+            setTimeout(() => {
+                filterItems();
+            }, 0);
         });
     }
 
@@ -136,9 +142,13 @@ document.querySelectorAll('#location-filter-buttons button').forEach(button => {
             activeLocations.clear();
             document.querySelectorAll('#location-filter-buttons button[data-location]').forEach(locBtn => {
                 locBtn.classList.remove('active');
-                void locBtn.offsetHeight; // ✅ force repaint
             });
-            filterItems();
+
+            document.body.offsetHeight;
+
+            setTimeout(() => {
+                filterItems();
+            }, 0);
         });
     }
 
@@ -152,8 +162,12 @@ document.querySelectorAll('#location-filter-buttons button').forEach(button => {
                 activeLocations.add(location);
                 button.classList.add('active');
             }
-            void button.offsetHeight;
-            filterItems();
+
+            document.body.offsetHeight;
+
+            setTimeout(() => {
+                filterItems();
+            }, 0);
         });
     }
 });
