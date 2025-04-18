@@ -8,3 +8,38 @@ li {
 button {
     margin-bottom: 20px;
 }
+
+@media (max-width: 768px) {
+  body {
+    font-size: 1.2rem;
+    padding: 1rem;
+  }
+
+  h1, h2, h4 {
+    font-size: 1.6rem;
+  }
+
+  .form-control {
+    font-size: 1.1rem;
+    padding: 0.75rem;
+  }
+
+  .btn {
+    font-size: 1.1rem;
+    padding: 0.6rem 1.2rem;
+  }
+
+  label.form-check-label {
+    font-size: 1.1rem;
+  }
+
+  .list-group-item {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+}
+
+input[type="checkbox"] {
+  transform: scale(1.5);
+  margin-right: 0.75rem;
+}
