@@ -112,6 +112,11 @@
     </div>
 
 <script>
+// Turn off Bootstrap's toggling behavior completely
+document.querySelectorAll('#location-filter-buttons button').forEach(button => {
+    button.setAttribute('data-bs-toggle', '');
+});
+
 let activeLocations = new Set();
 
 document.querySelectorAll('#location-filter-buttons button').forEach(button => {
