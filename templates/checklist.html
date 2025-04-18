@@ -114,10 +114,18 @@
 document.querySelectorAll('.toggle-packed').forEach(checkbox => {
     checkbox.addEventListener('change', function () {
         const itemId = this.getAttribute('data-id');
-        fetch(`toggle/${itemId}`, {
+        const isNowPacked = this.checked;
+
+        fetch(`/toggle/${itemId}`, {
             method: 'POST'
         }).then(() => {
-            // You can optionally refilter if needed, but this keeps your view untouched
+            const item = this.closest('.checklist-item');
+            if (item) {
+                item.setAttribute('data-packed', isNowPacked ? '1' : '0');
+            }
+
+            // Optional: if you want filters to apply immediately
+            filterItems();
         });
     });
 });
