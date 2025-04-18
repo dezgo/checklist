@@ -92,9 +92,7 @@
                                    {% if item.packed %}checked{% endif %}>
                             <div>
                                 <div>{{ item.name }}</div>
-                                {% if item.location %}
-                                    <small id="location-{{ item.id }}" class="text-muted">{{ item.location }}</small>
-                                {% endif %}
+                                <small id="location-{{ item.id }}" class="text-muted {% if not item.location %}d-none{% endif %}">{{ item.location or '' }}</small>
                             </div>
                         </div>
                         <div class="d-flex align-items-center gap-2">
