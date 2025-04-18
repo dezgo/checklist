@@ -9,24 +9,22 @@
     <div class="container">
         <h1 class="mb-4">Camp Checklist</h1>
 
-        <form action="{{ url_for('add_item') }}" method="post" class="mb-4">
-            <div class="row g-2">
-                <div class="col-md-6">
-                    <input type="text" name="name" class="form-control" placeholder="Item name" required>
-                </div>
-                <div class="col-md-4">
-                    <input list="category-options" name="category" class="form-control" placeholder="Category (optional)">
-                    <datalist id="category-options">
-                        {% for cat in categories %}
-                            <option value="{{ cat }}">
-                        {% endfor %}
-                    </datalist>
-                </div>
-                <div class="col-md-2">
-                    <button type="submit" class="btn btn-success w-100">Add Item</button>
-                </div>
-            </div>
-        </form>
+    <form action="{{ url_for('add_item') }}" method="post" class="mb-4">
+        <div class="mb-2">
+            <input type="text" name="name" class="form-control" placeholder="Item name" required>
+        </div>
+        <div class="mb-2">
+            <input list="category-options" name="category" class="form-control" placeholder="Category (optional)">
+            <datalist id="category-options">
+                {% for cat in categories %}
+                    <option value="{{ cat }}">
+                {% endfor %}
+            </datalist>
+        </div>
+        <div>
+            <button type="submit" class="btn btn-success w-100">Add Item</button>
+        </div>
+    </form>
 
         <div class="mb-4">
             <input type="text" id="searchBox" class="form-control" placeholder="Search items...">
