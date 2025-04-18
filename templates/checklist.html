@@ -48,14 +48,13 @@
         </div>
 
         <div class="mb-3">
-            <div class="btn-group flex-wrap" role="group" id="location-filter-buttons" aria-label="Location filters">
-                <button type="button" class="btn btn-outline-secondary" data-action="select-all">Select All</button>
-                <button type="button" class="btn btn-outline-secondary" data-action="clear-all">Clear</button>
-                <button type="button" class="btn btn-outline-primary" data-location="none">No Location</button>
-                {% for loc in locations %}
-                    <button type="button" class="btn btn-outline-primary" data-location="{{ loc }}">{{ loc }}</button>
-                {% endfor %}
-            </div>
+          <div class="btn-group flex-wrap" id="location-filter-buttons" role="group">
+            <button type="button" class="btn btn-outline-primary active" data-location="all">All</button>
+            <button type="button" class="btn btn-outline-primary" data-location="none">No Location</button>
+            {% for loc in locations %}
+              <button type="button" class="btn btn-outline-primary" data-location="{{ loc }}">{{ loc }}</button>
+            {% endfor %}
+          </div>
         </div>
 
         <form action="{{ url_for('reset') }}" method="post" class="mb-4" onsubmit="return confirm('Are you sure you want to clear all ticks?')">
@@ -112,75 +111,57 @@
     </div>
 
 <script>
-// Turn off Bootstrap's toggling behavior completely
-document.querySelectorAll('#location-filter-buttons button').forEach(button => {
-    button.setAttribute('data-bs-toggle', '');
-});
+let currentLocationFilter = 'all';
 
-let activeLocations = new Set();
+// Setup location filter buttons
+function setupLocationFilterButtons() {
+  document.querySelectorAll('#location-filter-buttons button').forEach(button => {
+    button.addEventListener('click', function () {
+      // Remove active from all buttons
+      document.querySelectorAll('#location-filter-buttons button').forEach(btn => btn.classList.remove('active'));
+      // Set this one active
+      this.classList.add('active');
+      // Set current filter value
+      currentLocationFilter = this.getAttribute('data-location').toLowerCase();
+      filterItems();
+    });
+  });
+}
 
-document.querySelectorAll('#location-filter-buttons button').forEach(button => {
-    const loc = button.getAttribute('data-location');
-    const action = button.getAttribute('data-action');
+function filterItems() {
+  const searchTerm = document.getElementById('searchBox').value.toLowerCase();
+  const activeLocations = new Set([currentLocationFilter]);
 
-    if (action === 'select-all') {
-        button.addEventListener('click', () => {
-            activeLocations.clear();
-            document.querySelectorAll('#location-filter-buttons button[data-location]').forEach(locBtn => {
-                const locVal = locBtn.getAttribute('data-location').toLowerCase();
-                activeLocations.add(locVal);
-                locBtn.classList.add('active');
-            });
+  document.querySelectorAll('.checklist-item').forEach(item => {
+    const text = item.innerText.toLowerCase();
+    const isPacked = item.getAttribute('data-packed') === '1';
+    const itemLocation = item.getAttribute('data-location')?.toLowerCase() || '';
+    const categoryTitle = item.closest('.category-block')?.querySelector('.category-title')?.innerText?.toLowerCase() || '';
 
-            // Force layout flush
-            document.body.offsetHeight;
+    const matchesText = text.includes(searchTerm);
+    const matchesCategory = categoryTitle.includes(searchTerm);
+    const matchesPacked =
+      currentPackedFilter === 'all' ||
+      (currentPackedFilter === 'packed' && isPacked) ||
+      (currentPackedFilter === 'unpacked' && !isPacked);
 
-            // Defer filter so Safari has time to paint the buttons
-            setTimeout(() => {
-                filterItems();
-            }, 0);
-        });
-    }
+    const matchesLocation =
+      currentLocationFilter === 'all' ||
+      (currentLocationFilter === 'none' && itemLocation === '') ||
+      (currentLocationFilter === itemLocation);
 
-    else if (action === 'clear-all') {
-        button.addEventListener('click', () => {
-            activeLocations.clear();
-            document.querySelectorAll('#location-filter-buttons button[data-location]').forEach(locBtn => {
-                locBtn.classList.remove('active');
-            });
+    item.style.display = ((matchesText || matchesCategory) && matchesPacked && matchesLocation) ? 'block' : 'none';
+  });
 
-            document.body.offsetHeight;
+  document.querySelectorAll('.category-block').forEach(block => {
+    const hasVisibleItems = Array.from(block.querySelectorAll('.checklist-item'))
+      .some(item => item.style.display !== 'none');
+    block.style.display = hasVisibleItems ? 'block' : 'none';
+  });
+}
 
-            setTimeout(() => {
-                filterItems();
-            }, 0);
-        });
-    }
-
-    else if (loc !== null) {
-        button.addEventListener('click', () => {
-            const location = loc.toLowerCase();
-
-            if (activeLocations.has(location)) {
-                activeLocations.delete(location);
-                button.classList.remove('active');
-            } else {
-                activeLocations.add(location);
-                button.classList.add('active');
-            }
-
-            // 👇 Force layout repaint
-            void button.offsetHeight;
-
-            // 👇 Force Safari to redraw by removing focus
-            button.blur();
-
-            setTimeout(() => {
-                filterItems();
-            }, 0);
-        });
-    }
-});
+// Run this on page load
+setupLocationFilterButtons();
 
 let currentPackedFilter = 'all';
 
@@ -193,38 +174,6 @@ document.querySelectorAll('[data-filter]').forEach(btn => {
         filterItems();
     });
 });
-
-function filterItems() {
-    const searchTerm = document.getElementById('searchBox').value.toLowerCase();
-
-    document.querySelectorAll('.checklist-item').forEach(item => {
-        const text = item.innerText.toLowerCase();
-        const isPacked = item.getAttribute('data-packed') === '1';
-        const itemLocation = item.getAttribute('data-location')?.toLowerCase() || '';
-
-        const categoryTitle = item.closest('.category-block')?.querySelector('.category-title')?.innerText?.toLowerCase() || '';
-
-        const matchesText = text.includes(searchTerm);
-        const matchesCategory = categoryTitle.includes(searchTerm);
-        const matchesPacked =
-            currentPackedFilter === 'all' ||
-            (currentPackedFilter === 'packed' && isPacked) ||
-            (currentPackedFilter === 'unpacked' && !isPacked);
-
-        const matchesLocation =
-            activeLocations.size === 0 ||
-            (activeLocations.has('none') && itemLocation === '') ||
-            activeLocations.has(itemLocation);
-
-        item.style.display = ((matchesText || matchesCategory) && matchesPacked && matchesLocation) ? 'block' : 'none';
-    });
-
-    document.querySelectorAll('.category-block').forEach(block => {
-        const hasVisibleItems = Array.from(block.querySelectorAll('.checklist-item'))
-            .some(item => item.style.display !== 'none');
-        block.style.display = hasVisibleItems ? 'block' : 'none';
-    });
-}
 
 document.querySelectorAll('.assign-btn').forEach(btn => {
     btn.addEventListener('click', () => {
