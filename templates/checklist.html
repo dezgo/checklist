@@ -126,7 +126,11 @@ document.querySelectorAll('#location-filter-buttons button').forEach(button => {
                 activeLocations.add(locVal);
                 locBtn.classList.add('active');
             });
-            filterItems();
+            requestAnimationFrame(() => {
+                setTimeout(() => {
+                    filterItems();
+                }, 0);
+            });
         });
     }
 
@@ -137,7 +141,9 @@ document.querySelectorAll('#location-filter-buttons button').forEach(button => {
                 locBtn.classList.remove('active');
             });
             requestAnimationFrame(() => {
-                filterItems();
+                setTimeout(() => {
+                    filterItems();
+                }, 0);
             });
         });
     }
@@ -153,7 +159,9 @@ document.querySelectorAll('#location-filter-buttons button').forEach(button => {
                 button.classList.add('active');
             }
             requestAnimationFrame(() => {
-                filterItems();
+                setTimeout(() => {
+                    filterItems();
+                }, 0);
             });
         });
     }
