@@ -84,19 +84,21 @@
                 {% endif %}
 
                 <div class="checklist-item" data-packed="{{ '1' if item.packed else '0' }}" data-location="{{ item.location | lower }}">
-                    <div class="list-group-item d-flex align-items-center justify-content-between">
-                        <form action="{{ url_for('toggle', item_id=item.id) }}" method="post" class="d-flex align-items-center w-100 me-2">
-                            <input type="checkbox" class="form-check-input me-2" onchange="this.form.submit()" {% if item.packed %}checked{% endif %}>
-                            <label class="form-check-label">
-                                {{ item.name }}
-                                <br>
-                                <small id="location-{{ item.id }}" class="text-muted {% if not item.location %}d-none{% endif %}">
-                                    {{ item.location }}
-                                </small>
-                            </label>
-                        </form>
-                        <div class="d-flex align-items-center">
-                            <a href="{{ url_for('edit_item', item_id=item.id) }}" class="text-primary text-decoration-none me-2" style="font-size: 1.2rem;">✏️</a>
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-start">
+                            <input type="checkbox"
+                                   class="form-check-input mt-1 me-2 toggle-packed"
+                                   data-id="{{ item.id }}"
+                                   {% if item.packed %}checked{% endif %}>
+                            <div>
+                                <div>{{ item.name }}</div>
+                                {% if item.location %}
+                                    <small id="location-{{ item.id }}" class="text-muted">{{ item.location }}</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <a href="{{ url_for('edit_item', item_id=item.id) }}" class="text-primary text-decoration-none" style="font-size: 1.2rem;">✏️</a>
                             <form action="{{ url_for('delete', item_id=item.id) }}" method="post" onsubmit="return confirm('Are you sure you want to delete this item?')">
                                 <button type="submit" class="btn btn-sm btn-link text-danger p-0" style="font-size: 1.25rem;">✕</button>
                             </form>
@@ -109,6 +111,19 @@
         </div> <!-- close final category-block -->
         </div>
     </div>
+
+<script>
+document.querySelectorAll('.toggle-packed').forEach(checkbox => {
+    checkbox.addEventListener('change', function () {
+        const itemId = this.getAttribute('data-id');
+        fetch(`/toggle/${itemId}`, {
+            method: 'POST'
+        }).then(() => {
+            // You can optionally refilter if needed, but this keeps your view untouched
+        });
+    });
+});
+</script>
 
 <script>
 let currentLocationFilter = 'all';
@@ -176,17 +191,26 @@ document.querySelectorAll('[data-filter]').forEach(btn => {
 });
 
 document.querySelectorAll('.assign-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
         const location = document.getElementById('quick-location').value;
         const id = btn.dataset.id;
 
-        fetch('/assign-location', {
+        // Do the POST to the backend
+        const res = await fetch('/assign-location', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: `id=${id}&location=${encodeURIComponent(location)}`
-        }).then(() => {
-            // Update the location text in-place
+        });
+
+        // If successful, update DOM
+        if (res.ok) {
+            const item = document.querySelector(`.assign-btn[data-id="${id}"]`).closest('.checklist-item');
             const label = document.querySelector(`#location-${id}`);
+
+            if (item) {
+                item.setAttribute('data-location', location.toLowerCase());
+            }
+
             if (label) {
                 if (location) {
                     label.innerText = location;
@@ -196,7 +220,12 @@ document.querySelectorAll('.assign-btn').forEach(btn => {
                     label.classList.add('d-none');
                 }
             }
-        });
+
+            // 💥 Small delay before filtering ensures attributes are in place
+            requestAnimationFrame(() => {
+                filterItems();
+            });
+        }
     });
 });
 </script>
