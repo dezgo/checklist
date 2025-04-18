@@ -114,7 +114,7 @@
 document.querySelectorAll('.toggle-packed').forEach(checkbox => {
     checkbox.addEventListener('change', function () {
         const itemId = this.getAttribute('data-id');
-        fetch(`/toggle/${itemId}`, {
+        fetch(`toggle/${itemId}`, {
             method: 'POST'
         }).then(() => {
             // You can optionally refilter if needed, but this keeps your view untouched
@@ -194,7 +194,7 @@ document.querySelectorAll('.assign-btn').forEach(btn => {
         const id = btn.dataset.id;
 
         // Do the POST to the backend
-        const res = await fetch('/assign-location', {
+        const res = await fetch('assign-location', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: `id=${id}&location=${encodeURIComponent(location)}`
