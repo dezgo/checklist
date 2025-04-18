@@ -160,6 +160,7 @@ document.querySelectorAll('#location-filter-buttons button').forEach(button => {
     else if (loc !== null) {
         button.addEventListener('click', () => {
             const location = loc.toLowerCase();
+
             if (activeLocations.has(location)) {
                 activeLocations.delete(location);
                 button.classList.remove('active');
@@ -168,7 +169,11 @@ document.querySelectorAll('#location-filter-buttons button').forEach(button => {
                 button.classList.add('active');
             }
 
-            document.body.offsetHeight;
+            // 👇 Force layout repaint
+            void button.offsetHeight;
+
+            // 👇 Force Safari to redraw by removing focus
+            button.blur();
 
             setTimeout(() => {
                 filterItems();
