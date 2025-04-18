@@ -125,10 +125,9 @@ document.querySelectorAll('#location-filter-buttons button').forEach(button => {
                 const locVal = locBtn.getAttribute('data-location').toLowerCase();
                 activeLocations.add(locVal);
                 locBtn.classList.add('active');
+                void locBtn.offsetHeight; // ✅ reflow for each button
             });
-            setTimeout(() => {
-                filterItems();
-            }, 0);
+            filterItems();
         });
     }
 
@@ -137,10 +136,9 @@ document.querySelectorAll('#location-filter-buttons button').forEach(button => {
             activeLocations.clear();
             document.querySelectorAll('#location-filter-buttons button[data-location]').forEach(locBtn => {
                 locBtn.classList.remove('active');
+                void locBtn.offsetHeight; // ✅ force repaint
             });
-            setTimeout(() => {
-                filterItems();
-            }, 0);
+            filterItems();
         });
     }
 
@@ -154,9 +152,8 @@ document.querySelectorAll('#location-filter-buttons button').forEach(button => {
                 activeLocations.add(location);
                 button.classList.add('active');
             }
-            setTimeout(() => {
-                filterItems();
-            }, 0);
+            void button.offsetHeight;
+            filterItems();
         });
     }
 });
