@@ -126,11 +126,9 @@ document.querySelectorAll('#location-filter-buttons button').forEach(button => {
                 activeLocations.add(locVal);
                 locBtn.classList.add('active');
             });
-            requestAnimationFrame(() => {
-                setTimeout(() => {
-                    filterItems();
-                }, 0);
-            });
+            setTimeout(() => {
+                filterItems();
+            }, 0);
         });
     }
 
@@ -140,11 +138,9 @@ document.querySelectorAll('#location-filter-buttons button').forEach(button => {
             document.querySelectorAll('#location-filter-buttons button[data-location]').forEach(locBtn => {
                 locBtn.classList.remove('active');
             });
-            requestAnimationFrame(() => {
-                setTimeout(() => {
-                    filterItems();
-                }, 0);
-            });
+            setTimeout(() => {
+                filterItems();
+            }, 0);
         });
     }
 
@@ -158,11 +154,9 @@ document.querySelectorAll('#location-filter-buttons button').forEach(button => {
                 activeLocations.add(location);
                 button.classList.add('active');
             }
-            requestAnimationFrame(() => {
-                setTimeout(() => {
-                    filterItems();
-                }, 0);
-            });
+            setTimeout(() => {
+                filterItems();
+            }, 0);
         });
     }
 });
