@@ -116,7 +116,7 @@ document.querySelectorAll('.toggle-packed').forEach(checkbox => {
         const itemId = this.getAttribute('data-id');
         const isNowPacked = this.checked;
 
-        fetch(`/toggle/${itemId}`, {
+        fetch(`toggle/${itemId}`, {
             method: 'POST'
         }).then(() => {
             const item = this.closest('.checklist-item');
