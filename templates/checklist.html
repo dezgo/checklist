@@ -8,32 +8,16 @@
 </head>
 <body class="bg-light p-4 fs-5">
     <div class="container">
-        <h1 class="mb-4">Camp Checklist</h1>
+        <h1 class="mb-4 d-flex align-items-center gap-2">
+          Camp Checklist
+          <span id="offlineBadge" class="badge bg-danger d-none">Offline</span>
+        </h1>
 
-        <form action="{{ url_for('add_item') }}" method="post" class="mb-4">
-            <div class="mb-2">
-                <input type="text" name="name" class="form-control" placeholder="Item name" required>
-            </div>
-            <div class="mb-2">
-                <input list="category-options" name="category" class="form-control" placeholder="Category (optional)">
-                <datalist id="category-options">
-                    {% for cat in categories %}
-                        <option value="{{ cat }}">
-                    {% endfor %}
-                </datalist>
-            </div>
-            <div class="mb-2">
-                <input list="location-options" name="location" class="form-control" placeholder="Location (optional)">
-                <datalist id="location-options">
-                    {% for loc in locations %}
-                        <option value="{{ loc }}">
-                    {% endfor %}
-                </datalist>
-            </div>
+        <div class="mb-4">
             <div>
-                <button type="submit" class="btn btn-success w-100">Add Item</button>
+                <button class="btn btn-sm btn-success mb-3" onclick="showAddItemModal()">Add New Item</button>
             </div>
-        </form>
+        </div>
 
         <div class="mb-4">
             <input type="text" id="searchBox" class="form-control" placeholder="Search items...">
@@ -96,7 +80,10 @@
                             </div>
                         </div>
                         <div class="d-flex align-items-center gap-2">
-                            <a href="{{ url_for('edit_item', item_id=item.id) }}" class="text-primary text-decoration-none" style="font-size: 1.2rem;">✏️</a>
+                            <button class="btn btn-sm btn-secondary"
+                                onclick="openEditModal('{{ item.id }}', '{{ item.name|escape }}', '{{ item.category|escape }}', '{{ item.location|escape }}')">
+                                Edit
+                            </button>
                             <form action="{{ url_for('delete', item_id=item.id) }}" method="post" onsubmit="return confirm('Are you sure you want to delete this item?')">
                                 <button type="submit" class="btn btn-sm btn-link text-danger p-0" style="font-size: 1.25rem;">✕</button>
                             </form>
@@ -110,8 +97,46 @@
         </div>
     </div>
 
+    <!-- Modal -->
+    <div class="modal fade" id="itemModal" tabindex="-1" aria-labelledby="itemModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="itemModalLabel">Edit Item</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="itemForm">
+              <input type="hidden" id="itemId" name="itemId">
+              <div class="mb-3">
+                <label for="itemName" class="form-label">Item Name</label>
+                <input type="text" class="form-control" id="itemName" name="itemName" required>
+              </div>
+            <div class="mb-3">
+                <label for="itemCategory" class="form-label">Category</label>
+                <select class="form-select" id="itemCategory" name="itemCategory">
+                    <!-- Options will be populated dynamically -->
+                </select>
+            </div>
+
+                <div class="mb-3">
+                    <label for="itemLocation" class="form-label">Location</label>
+                    <select class="form-select" id="itemLocation" name="itemLocation">
+                        <!-- Options will be populated dynamically -->
+                    </select>
+                </div>
+              <button type="submit" class="btn btn-primary">Save</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+<!-- Bootstrap JS (required for modals, dropdowns, etc.) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
 <script>
-document.querySelectorAll('.toggle-packed').forEach(checkbox => {
+    document.querySelectorAll('.toggle-packed').forEach(checkbox => {
     checkbox.addEventListener('change', function () {
         const itemId = this.getAttribute('data-id');
         const isNowPacked = this.checked;
@@ -234,6 +259,243 @@ document.querySelectorAll('.assign-btn').forEach(btn => {
         }
     });
 });
+</script>
+
+<script>
+const categories = {{ categories|tojson }};
+const locations = {{ locations|tojson }};
+const saveUrl = "{{ url_for('save_item') }}";
+const deleteUrlTemplate = "{{ url_for('delete', item_id=0) }}";  // Replace 0 dynamically later
+
+function populateSelectOptions() {
+    const categorySelect = document.getElementById('itemCategory');
+    const locationSelect = document.getElementById('itemLocation');
+
+    categorySelect.innerHTML = '';
+    locationSelect.innerHTML = '';
+
+    categories.forEach(cat => {
+        const option = document.createElement('option');
+        option.value = cat;
+        option.textContent = cat;
+        categorySelect.appendChild(option);
+    });
+
+    locations.forEach(loc => {
+        const option = document.createElement('option');
+        option.value = loc;
+        option.textContent = loc;
+        locationSelect.appendChild(option);
+    });
+}
+
+function showAddItemModal() {
+    document.getElementById('itemModalLabel').innerText = 'Add New Item';
+    document.getElementById('itemId').value = '';
+    document.getElementById('itemName').value = '';
+    populateSelectOptions();
+    var itemModal = new bootstrap.Modal(document.getElementById('itemModal'));
+    itemModal.show();
+}
+
+function openEditModal(id, name, category, location) {
+    document.getElementById('itemModalLabel').innerText = 'Edit Item';
+    document.getElementById('itemId').value = id;
+    document.getElementById('itemName').value = name;
+    populateSelectOptions();
+    document.getElementById('itemCategory').value = category;
+    document.getElementById('itemLocation').value = location;
+    var itemModal = new bootstrap.Modal(document.getElementById('itemModal'));
+    itemModal.show();
+}
+
+function updateItemInDOM(id, name, category, location) {
+    const item = document.querySelector(`.checklist-item input[data-id="${id}"]`)?.closest('.checklist-item');
+
+    if (item) {
+        // Update name
+        item.querySelector('div > div').innerText = name;
+
+        // Update location label
+        const label = document.getElementById(`location-${id}`);
+        if (label) {
+            if (location) {
+                label.innerText = location;
+                label.classList.remove('d-none');
+            } else {
+                label.innerText = '';
+                label.classList.add('d-none');
+            }
+        }
+
+        // Update the location attribute (used for filtering)
+        item.setAttribute('data-location', (location || '').toLowerCase());
+    }
+}
+
+function addItemToDOM(id, name, category, location) {
+    const checklistContainer = document.getElementById('checklistContainer');
+    let categoryBlock = Array.from(checklistContainer.querySelectorAll('.category-block'))
+        .find(block => block.querySelector('.category-title')?.innerText.trim() === (category || 'Uncategorised'));
+
+    if (!categoryBlock) {
+        // If the category doesn't exist yet, create it
+        categoryBlock = document.createElement('div');
+        categoryBlock.className = 'category-block mb-3';
+        categoryBlock.innerHTML = `
+            <h4 class="category-title mt-4">${category || 'Uncategorised'}</h4>
+            <div class="list-group"></div>
+        `;
+        checklistContainer.appendChild(categoryBlock);
+    }
+
+    const listGroup = categoryBlock.querySelector('.list-group');
+
+    const newItem = document.createElement('div');
+    newItem.className = 'checklist-item';
+    newItem.setAttribute('data-packed', '0');
+    newItem.setAttribute('data-location', (location || '').toLowerCase());
+    newItem.innerHTML = `
+        <div class="list-group-item d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-start">
+                <input type="checkbox" class="form-check-input mt-1 me-2 toggle-packed" data-id="${id}">
+                <div>
+                    <div>${name}</div>
+                    <small id="location-${id}" class="text-muted ${location ? '' : 'd-none'}">${location || ''}</small>
+                </div>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <button class="btn btn-sm btn-secondary" onclick="openEditModal('${id}', '${name}', '${category}', '${location}')">Edit</button>
+                <form action="${deleteUrlTemplate.replace('0', id)}" method="post" onsubmit="return confirm('Are you sure you want to delete this item?')">
+                    <button type="submit" class="btn btn-sm btn-link text-danger p-0" style="font-size: 1.25rem;">✕</button>
+                </form>
+                <button class="btn btn-sm btn-outline-secondary assign-btn" data-id="${id}">➕</button>
+            </div>
+        </div>
+    `;
+
+    listGroup.appendChild(newItem);
+}
+
+function saveLocalItem(item) {
+    let items = JSON.parse(localStorage.getItem('offline_items') || '[]');
+    items.push(item);
+    localStorage.setItem('offline_items', JSON.stringify(items));
+}
+
+// Submit the form via fetch() instead of full reload
+document.getElementById('itemForm').addEventListener('submit', async function(event) {
+    event.preventDefault();
+    const id = document.getElementById('itemId').value;
+    const name = document.getElementById('itemName').value;
+    const category = document.getElementById('itemCategory').value;
+    const itemLocation = document.getElementById('itemLocation').value;
+
+    const data = { id, name, category, location: itemLocation };
+
+    if (navigator.onLine) {
+        // Online: Try to send to server
+        const response = await fetch(saveUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data),
+        });
+
+        if (response.ok) {
+            const itemModal = bootstrap.Modal.getInstance(document.getElementById('itemModal'));
+            itemModal.hide();
+
+            const result = await response.json();
+
+            if (id) {
+                updateItemInDOM(id, name, category, itemLocation);
+            } else {
+                addItemToDOM(result.id, name, category, itemLocation);
+            }
+
+            filterItems();
+        } else {
+            alert('Error saving item.');
+        }
+    } else {
+        const itemModal = bootstrap.Modal.getInstance(document.getElementById('itemModal'));
+        itemModal.hide();
+
+        // Offline: Use fake ID and store locally
+        const fakeId = 'local-' + Date.now();
+
+
+        addItemToDOM(fakeId, name, category, itemLocation);
+
+        saveLocalItem({ id: fakeId, name, category, location: itemLocation });
+
+        filterItems();
+    }
+});
+
+async function trySyncOfflineItems() {
+    const items = JSON.parse(localStorage.getItem('offline_items') || '[]');
+    if (items.length === 0) {
+        return; // Nothing to sync
+    }
+
+    console.log(`Syncing ${items.length} offline items...`);
+
+    for (const item of items) {
+        try {
+            const response = await fetch(saveUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: '',  // Treat as new add
+                    name: item.name,
+                    category: item.category,
+                    location: item.location
+                })
+            });
+
+            if (response.ok) {
+                console.log(`Item '${item.name}' synced.`);
+            } else {
+                console.error(`Failed to sync item '${item.name}'`);
+                return;  // Stop syncing if any error
+            }
+        } catch (error) {
+            console.error(`Sync error: ${error}`);
+            return;  // Stop syncing if offline again
+        }
+    }
+
+    // If all syncs succeeded, clear local offline_items
+    localStorage.removeItem('offline_items');
+    console.log('All offline items synced successfully.');
+}
+
+function updateOfflineBadge() {
+    const badge = document.getElementById('offlineBadge');
+    if (navigator.onLine) {
+        badge.classList.add('d-none');
+    } else {
+        badge.classList.remove('d-none');
+    }
+}
+
+// Check immediately on page load
+updateOfflineBadge();
+
+window.addEventListener('online', () => {
+    console.log('Back online');
+    updateOfflineBadge();
+    trySyncOfflineItems();
+});
+
+window.addEventListener('offline', () => {
+    console.log('Offline');
+    updateOfflineBadge();
+});
+
 </script>
 
 </body>

@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, url_for, request
+from flask import Flask, render_template, redirect, url_for, request, jsonify
 import sqlite3
 from werkzeug.middleware.proxy_fix import ProxyFix
 
@@ -55,19 +55,43 @@ def delete(item_id):
     return redirect(url_for('index'))
 
 
-@app.route('/add', methods=['POST'])
-def add_item():
-    name = request.form.get('name')
-    category = request.form.get('category') or 'Uncategorised'
-    if name:
-        conn = get_db_connection()
-        conn.execute(
-            'INSERT INTO checklist (name, category, packed) VALUES (?, ?, 0)',
-            (name.strip(), category.strip())
+@app.route('/save', methods=['POST'])
+def save_item():
+    data = request.get_json()
+    item_id = data.get('id')
+    name = data.get('name')
+    category = data.get('category')
+    location = data.get('location')
+
+    conn = get_db_connection()
+
+    if item_id:
+        # Fetch existing item
+        existing = conn.execute('SELECT name, category, location FROM checklist WHERE id = ?', (item_id,)).fetchone()
+        if existing:
+            # Compare fields
+            if (existing['name'] != name) or (existing['category'] != category) or (existing['location'] != location):
+                # Only update if something actually changed
+                conn.execute(
+                    'UPDATE checklist SET name = ?, category = ?, location = ? WHERE id = ?',
+                    (name, category, location, item_id)
+                )
+            else:
+                print(f"No changes detected for item {item_id}, skipping update.")
+        else:
+            print(f"Warning: Item with id {item_id} not found.")
+    else:
+        # No id = add new item
+        cursor = conn.execute(
+            'INSERT INTO checklist (name, category, location) VALUES (?, ?, ?)',
+            (name, category, location)
         )
-        conn.commit()
-        conn.close()
-    return redirect(url_for('index'))
+
+    conn.commit()
+    new_id = cursor.lastrowid
+    conn.close()
+    return jsonify(success=True, id=new_id)
+
 
 
 @app.route('/edit/<int:item_id>', methods=['GET', 'POST'])
